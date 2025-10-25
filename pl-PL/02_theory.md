@@ -256,10 +256,6 @@ Oto przepis na realizację projektu uczenia maszynowego od początku do końca, 
 
 --
 
-Oczywiście. Poniżej znajduje się szczegółowe omówienie wszystkich porad i wskazówek, które w tekście są oznaczone ikonami pomarańczowego skorpiona (zwykle ostrzeżenia) i zielonej jaszczurki (zwykle dobre praktyki i porady).
-
----
-
 ### Porady Skorpiona (Ostrzeżenia i Pułapki)
 
 Te porady zwracają uwagę na kluczowe, fundamentalne zasady, których zignorowanie może prowadzić do poważnych błędów w projekcie.
@@ -293,10 +289,6 @@ Te porady zwracają uwagę na kluczowe, fundamentalne zasady, których zignorowa
 *   **Dlaczego to jest ważne?** To techniczna, ale kluczowa uwaga. Bez zrozumienia tej konwencji moglibyśmy źle zinterpretować wyniki lub użyć niewłaściwej metryki, co prowadziłoby do wyboru złego modelu.
 
 ---
-
-### Porady Jaszczurki (Dobre Praktyki i Wskazówki)
-
-Te porady to praktyczne wskazówki, które ułatwiają pracę, pomagają uzyskać lepsze wyniki i podpowiadają, jak radzić sobie z typowymi problemami.
 
 #### 1. Radzenie Sobie z Dużą Liczbą Kategorii
 
@@ -339,3 +331,24 @@ Te porady to praktyczne wskazówki, które ułatwiają pracę, pomagają uzyska�
 *   **Kontekst:** Ostatnia porada w sekcji o dostrajaniu modelu.
 *   **Wyjaśnienie w Prostym Języku:** To bardzo potężna idea. Wcześniej stworzyliśmy własny transformator `CombinedAttributesAdder`, który miał hiperparametr `add_bedrooms_per_room` (domyślnie `True`). Oznacza to, że możemy włączyć ten krok przygotowania danych do siatki `GridSearchCV`! Możemy kazać mu przetestować dwie opcje: jedną z dodaną cechą `bedrooms_per_room` i drugą bez niej. `GridSearch` sam, na podstawie wyników, zdecyduje, czy dodanie tej cechy faktycznie poprawia model, czy nie. W ten sposób możemy zautomatyzować nie tylko dostrajanie modelu, ale także wybór najlepszych kroków w przygotowaniu danych.
 *   **Dlaczego to jest ważne?** To łączy przygotowanie danych i modelowanie w jeden, spójny proces optymalizacji. Zamiast zgadywać, czy dany krok inżynierii cech jest dobry, pozwalamy, aby dane i wyniki same nam na to odpowiedziały.
+
+---
+
+### Porada Skorpiona: Automatyczne Ponowne Trenowanie Najlepszego Modelu
+
+*   **Cytat:** *"If GridSearchCV is initialized with `refit=True` (which is the default), then once it finds the best estimator using cross-validation, it retrains it on the whole training set. This is usually a good idea, since feeding it more data will likely improve its performance."*
+*   **Kontekst:** Ta uwaga znajduje się w sekcji "Dopracowanie Modelu" (`Fine-Tune Your Model`), tuż po tym, jak pokazano, jak uzyskać najlepszy model (`best_estimator_`) z obiektu `GridSearchCV`.
+*   **Wyjaśnienie w Prostym Języku:**
+    Wyobraź sobie, że jesteś trenerem drużyny sportowej i chcesz znaleźć najlepszy plan treningowy przed wielkim meczem. Masz 100 zawodników (cały zbiór treningowy).
+    1.  **Sprawdzian krzyżowy (Cross-Validation):** Zamiast od razu trenować całą drużynę, testujesz różne plany treningowe (różne kombinacje hiperparametrów) na mniejszych, 10-osobowych grupach. Każdy plan jest testowany kilka razy na różnych grupach, aby ocena była sprawiedliwa.
+    2.  **Znalezienie najlepszego planu:** Po wszystkich testach dochodzisz do wniosku, że "Plan B" daje najlepsze wyniki.
+    3.  **Co teraz?** Czy na wielki mecz wystawisz tylko tę jedną 10-osobową grupę, która testowała "Plan B"? Oczywiście, że nie! Weźmiesz ten zwycięski "Plan B" i zastosujesz go do treningu **całej swojej 100-osobowej drużyny**.
+
+    Dokładnie to robi `GridSearchCV` z opcją `refit=True`. Po przetestowaniu wszystkich kombinacji i znalezieniu tej "najlepszej recepty" (najlepszych hiperparametrów), nie zwraca on po prostu jednego z tych małych modeli testowych. Zamiast tego, bierze tę zwycięską receptę i **automatycznie trenuje zupełnie nowy model od zera, ale tym razem na całym dostępnym zbiorze treningowym**.
+
+*   **Dlaczego to jest ważne?**
+    *   **Lepsza Wydajność:** Model wytrenowany na większej ilości danych jest prawie zawsze lepszy i bardziej niezawodny. Ten finalny model, który otrzymujemy, uczył się z większej liczby przykładów niż którykolwiek z modeli używanych podczas etapu testowania (sprawdzianu krzyżowego).
+    *   **Wygoda i Automatyzacja:** To ogromne ułatwienie. Nie musisz ręcznie spisywać najlepszych parametrów, tworzyć nowego modelu z tymi parametrami i trenować go samodzielnie. `GridSearchCV` robi to wszystko za Ciebie w jednym kroku. Obiekt `best_estimator_` jest już tym finalnym, w pełni wytrenowanym modelem.
+    *   **Gotowość do Użycia:** Dzięki tej opcji, model, który uzyskujesz na końcu procesu dostrajania, jest od razu gotowy do ostatecznej oceny na zbiorze testowym lub do wdrożenia na produkcję. To finalny, najlepszy produkt całego procesu poszukiwaawczego.
+
+Warto zauważyć, że chociaż ta porada jest oznaczona ikoną skorpiona (która zwykle jest ostrzeżeniem), w tym przypadku ma ona charakter informacyjny – wyjaśnia bardzo ważne, domyślne zachowanie narzędzia, które jest kluczowe dla zrozumienia, co tak naprawdę otrzymujemy jako wynik jego pracy.
