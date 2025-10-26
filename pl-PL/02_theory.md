@@ -117,6 +117,33 @@ To jeden z najważniejszych i często pomijanych kroków w całym procesie. Zani
     for train_index, test_index in split.split(housing, housing["income_cat"]):
         strat_train_set = housing.loc[train_index]
         strat_test_set = housing.loc[test_index]
+    
+    # StratifiedKFold: idealny do cross-validation
+    from sklearn.model_selection import StratifiedKFold
+    
+    skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+    # Iteruje przez 5 foldów (części), każdy zachowuje proporcje kategorii
+    for train_index, test_index in skf.split(housing, housing["income_cat"]):
+        # train_index zawiera indeksy 4/5 danych (trening)
+        # test_index zawiera indeksy 1/5 danych (walidacja)
+        train_fold = housing.loc[train_index]
+        test_fold = housing.loc[test_index]
+        # Tutaj moglibyśmy trenować model i oceniać go na test_fold
+        # Powtarzamy to 5 razy, każdy raz z innym podziałem
+    
+    # StratifiedGroupKFold: dla danych pogrupowanych (np. pomiary od różnych pacjentów)
+    from sklearn.model_selection import StratifiedGroupKFold
+    
+    # Przykładowo: załóżmy, że mamy kolumnę 'patient_id' grupującą pomiary
+    # housing["patient_id"] = ...  # Każdy pacjent może mieć wiele rekordów
+    
+    sgkf = StratifiedGroupKFold(n_splits=5)
+    # WAŻNE: wszystkie próbki z tej samej grupy trafiają do tego samego folda
+    for train_index, test_index in sgkf.split(housing, housing["income_cat"], 
+                                              groups=housing["patient_id"]):
+        train_fold = housing.loc[train_index]
+        test_fold = housing.loc[test_index]
+        # Gwarancja: żaden pacjent nie ma danych w obu zbiorach jednocześnie
     ```
 
 ---
