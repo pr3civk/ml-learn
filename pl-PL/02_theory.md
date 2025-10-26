@@ -6,11 +6,25 @@ Na samym początku projektu musimy wczytać dane. W tym przypadku dane są w pli
 import pandas as pd
 import os
 
-# Zmienna HOUSING_PATH to ścieżka do folderu z danymi
+# Definiujemy ścieżkę do folderu z danymi
+HOUSING_PATH = os.path.join("datasets", "housing")
+
+# Funkcja wczytująca dane - robimy to w funkcji dla lepszej organizacji kodu
 def load_housing_data(housing_path=HOUSING_PATH):
     csv_path = os.path.join(housing_path, "housing.csv")
     return pd.read_csv(csv_path)
+
+# Użycie funkcji
+housing = load_housing_data()
+
+# Pełny import wszystkich potrzebnych bibliotek na początku projektu
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import StratifiedShuffleSplit
 ```
+
+* **Wyjaśnienie:** Importujemy podstawowe biblioteki do analizy danych. `pandas` do tabel, `numpy` do obliczeń numerycznych, `matplotlib` i `seaborn` do wizualizacji, a `sklearn` do uczenia maszynowego.
 
 *   **Cel i przeznaczenie:** Tworzymy małą funkcję, która wczytuje dane. Robimy to w funkcji, aby kod był bardziej uporządkowany. Jeśli w przyszłości będziemy chcieli wczytać dane z innego miejsca lub w inny sposób, wystarczy, że zmienimy tę jedną funkcję, a nie kod w wielu miejscach projektu.
 *   **`pandas`:** To biblioteka do Pythona, która ułatwia pracę z danymi tabelarycznymi. Można o niej myśleć jak o super-zaawansowanym Excelu, którym sterujemy za pomocą kodu.
@@ -30,30 +44,36 @@ Zanim zaczniemy skomplikowane analizy, musimy "zapoznać się" z naszymi danymi.
     ```python
     housing = load_housing_data()
     housing.head()
+    # Wyświetla pierwsze 5 wierszy - widzimy strukture danych
     ```
 
 2.  **`info()`**
-    *   **Czym jest?** Metoda, która daje nam techniczne podsumowanie danych.
-    *   **Po co to robimy?** `info()` to nasz pierwszy "raport diagnostyczny". Mówi nam:
-        *   Ile jest wszystkich wierszy (wpisów). W tym przypadku 20,640.
-        *   Jakie są nazwy wszystkich kolumn i jakiego są typu (`float64` to liczba dziesiętna, `object` to zazwyczaj tekst).
-        *   **Najważniejsze:** Ile jest wartości niepustych (`non-null`) w każdej kolumnie. W przykładzie widzimy, że kolumna `total_bedrooms` ma tylko 20,433 wartości, podczas gdy inne mają 20,640. To od razu sygnalizuje nam problem: mamy brakujące dane, którymi będziemy musieli się zająć.
 
-3.  **`value_counts()`**
-    *   **Czym jest?** Metoda używana na pojedynczej kolumnie (zwanej w `pandas` `Series`), która zlicza, ile razy występuje każda unikalna wartość.
-    *   **Po co to robimy?** Jest to niezwykle przydatne dla kolumn, które nie są czysto numeryczne, ale reprezentują kategorie. W naszym przykładzie kolumna `ocean_proximity` (bliskość oceanu) jest typu `object` (tekst). Używając `value_counts()`, dowiadujemy się, jakie są możliwe kategorie (`<1H OCEAN`, `INLAND` itd.) i ile dzielnic należy do każdej z nich. To pomaga nam zrozumieć rozkład tej cechy.
     ```python
-    housing["ocean_proximity"].value_counts()
+    housing.info()
+    # Wyświetla podstawowe informacje: liczba wierszy, kolumny, typy danych i brakujące wartości
     ```
 
-4.  **`describe()`**
+3.  **`describe()`**
     *   **Czym jest?** Metoda, która generuje statystyczne podsumowanie dla wszystkich kolumn numerycznych.
     *   **Po co to robimy?** Daje nam to szybki wgląd w rozkład liczbowy naszych danych. Widzimy takie wartości jak:
         *   `count`: Liczba wpisów (ponownie, widzimy braki w `total_bedrooms`).
         *   `mean`: Średnia arytmetyczna.
         *   `std`: Odchylenie standardowe (jak bardzo wartości są "rozstrzelone" wokół średniej).
         *   `min` i `max`: Wartość minimalna i maksymalna.
-        *   `25%`, `50%`, `75%`: **Percentyle**. Mówią nam, jakie wartości oddzielają kolejne ćwiartki danych. Np. `25%` dla `housing_median_age` wynosi 18, co oznacza, że 25% dzielnic ma domy o medianie wieku poniżej 18 lat. `50%` to inaczej **mediana**.
+        *   `25%`, `50%`, `75%`: **Percentyle**. Mówią nam, jakie wartości oddzielają kolejne ćwiartki danych. Np. `25%` dla `housing_median_age運行 wynosi 18, co oznacza, że 25% dzielnic ma domy o medianie wieku poniżej 18 lat. `50%` to inaczej **mediana**.
+    ```python
+    housing.describe()
+    # Statystyki dla wszystkich kolumn numerycznych
+    ```
+
+4.  **`value_counts()`**
+    *   **Czym jest?** Metoda używana na pojedynczej kolumnie (zwanej w `pandas` `Series`), która zlicza, ile razy występuje każda unikalna wartość.
+    *   **Po co to robimy?** Jest to niezwykle przydatne dla kolumn, które nie są czysto numeryczne, ale reprezentują kategorie. W naszym przykładzie kolumna `ocean_proximity` (bliskość oceanu) jest typu `object` (tekst). Używając `value_counts()`, dowiadujemy się, jakie są możliwe kategorie (`<1H OCEAN`, `INLAND` itd.) i ile dzielnic należy do każdej z nich. To pomaga nam zrozumieć rozkład tej cechy.
+    ```python
+    housing["ocean_proximity"].value_counts()
+    # Zlicza wystąpienia każdej wartości w kolumnie kategorycznej
+    ```
 
 ---
 
@@ -161,6 +181,16 @@ Teraz, pracując **tylko na zbiorze treningowym**, możemy zacząć głębszą a
     *   `c=median_house_value`: Kolor kółka (`c`) zależy od mediany ceny domu. Używamy mapy kolorów (`cmap`), gdzie np. niebieski oznacza tanio, a czerwony drogo.
 *   **Wnioski:** Taka wizualizacja natychmiast pokazuje, że ceny domów są silnie powiązane z lokalizacją (drożej przy wybrzeżu, w dużych miastach) i gęstością zaludnienia.
 
+```python
+# Wizualizacja danych geograficznych
+housing.plot(kind="scatter", x="longitude", y="latitude", alpha=0.1)
+# Lub bardziej szczegółowa wersja z kolorami i rozmiarem punktów
+housing.plot(kind="scatter", x="longitude", y="latitude", alpha=0.4,
+             s=housing["population"]/100, label="population",
+             c="median_house_value", cmap=plt.get_cmap("jet"), colorbar=True)
+plt.legend()
+```
+
 #### Szukanie Korelacji (Looking for Correlations)
 
 *   **Korelacja:** To miara statystyczna, która mówi, jak silnie dwie zmienne są ze sobą powiązane liniowo. Współczynnik korelacji (Pearsona) przyjmuje wartości od -1 do 1.
@@ -171,11 +201,41 @@ Teraz, pracując **tylko na zbiorze treningowym**, możemy zacząć głębszą a
 *   **Ważna uwaga:** Korelacja mierzy tylko **zależności liniowe**. Może całkowicie pominąć bardziej złożone wzorce (np. paraboliczne). Dlatego wizualizacja jest tak ważna.
 *   **`scatter_matrix`:** Funkcja `pandas`, która tworzy macierz wykresów. Rysuje wykres rozrzutu dla każdej pary atrybutów. To świetny sposób na wizualne zbadanie korelacji między wieloma zmiennymi naraz.
 
+```python
+# Obliczanie korelacji
+corr_matrix = housing.corr()
+# Korelacja każdej cechy z median_house_value
+corr_matrix["median_house_value"].sort_values(ascending=False)
+
+# Wizualizacja korelacji jako heatmap
+import seaborn as sns
+sns.heatmap(corr_matrix, annot=True, fmt='.2f', cmap='coolwarm')
+
+# Macierz wykresów rozrzutu dla kluczowych atrybutów
+from pandas.plotting import scatter_matrix
+attributes = ["median_house_value", "median_income", "total_rooms", "housing_median_age"]
+scatter_matrix(housing[attributes], figsize=(12, 8))
+
+# Szczegółowy wykres dla median_income vs median_house_value
+housing.plot(kind="scatter", x="median_income", y="median_house_value", alpha=0.1)
+```
+
 #### Eksperymentowanie z Kombinacjami Atrybutów
 
 *   **Czym jest?** Proces tworzenia nowych, bardziej informatywnych cech z tych, które już mamy. Nazywa się to **inżynierią cech (feature engineering)**.
 *   **Po co to robimy?** Czasem surowe dane nie są najlepszym predyktorem. Na przykład, `total_rooms` (łączna liczba pokoi w dzielnicy) sama w sobie niewiele mówi. Ale jeśli podzielimy ją przez `households` (liczbę gospodarstw domowych), otrzymamy nową cechę `rooms_per_household` (pokoje na gospodarstwo domowe), która znacznie lepiej opisuje, jak duże są domy w okolicy. Podobnie tworzymy `bedrooms_per_room` i `population_per_household`.
 *   **Wynik:** Po stworzeniu tych nowych cech i ponownym sprawdzeniu korelacji okazuje się, że np. `bedrooms_per_room` ma silniejszą (ujemną) korelację z ceną niż `total_rooms` czy `total_bedrooms`. Oznacza to, że im mniejszy stosunek sypialni do wszystkich pokoi, tym dom jest droższy. Znaleźliśmy nową, potężną cechę!
+
+```python
+# Tworzenie nowych cech (feature engineering)
+housing["rooms_per_household"] = housing["total_rooms"] / housing["households"]
+housing["bedrooms_per_room"] = housing["total_bedrooms"] / housing["total_rooms"]
+housing["population_per_household"] = housing["population"] / housing["households"]
+
+# Sprawdzanie korelacji nowych cech
+corr_matrix = housing.corr()
+print(corr_matrix["median_house_value"].sort_values(ascending=False))
+```
 
 ---
 
@@ -192,7 +252,26 @@ Algorytmy ML są jak wybredni szefowie kuchni – potrzebują składników przyg
     3.  **Wypełnić braki** jakąś wartością (np. zerem, średnią lub medianą).
 *   **Najlepsze podejście:** Wypełnienie medianą jest często dobrym wyborem, ponieważ jest mniej wrażliwe na wartości odstające niż średnia.
 *   **`SimpleImputer`:** Klasa z biblioteki `scikit-learn`, która automatyzuje ten proces. Tworzymy "imputer", który "uczy się" mediany z danych treningowych, a następnie używamy go do wypełnienia braków.
-    *   **Dlaczego `scikit-learn`?** Ta biblioteka zawiera gotowe narzędzia do większości zadań ML. Jej obiekty (jak `SimpleImputer`) mają spójny interfejs: metoda `fit()` do "nauczenia się" czegoś z danych (np. mediany) i metoda `transform()` do zastosowania tej transformacji.
+    *   ** Dlaczego `scikit-learn`?** Ta biblioteka zawiera gotowe narzędzia do większości zadań ML. Jej obiekty (jak `SimpleImputer`) mają spójny interfejs: metoda `fit()` do "nauczenia się" czegoś z danych (np. mediany) i metoda `transform()` do zastosowania tej transformacji.
+
+```python
+from sklearn.impute import SimpleImputer
+
+# Tworzenie imputera z strategią "median"
+imputer = SimpleImputer(strategy="median")
+# Usuń kolumny kategoryczne dla imputera (pracuje tylko z liczbami)
+housing_num = housing.drop("ocean_proximity", axis=1)
+
+# Uczenie się median z danych
+imputer.fit(housing_num)
+
+# Wypełnienie brakujących wartości
+housing_num_transformed = imputer.transform(housing_num)
+# Wynik to numpy array - zamieniamy z powrotem na DataFrame
+housing_num_tr = pd.DataFrame(housing_num_transformed, 
+                               columns=housing_num.columns,
+                               index=housing_num.index)
+```
 
 #### Obsługa Atrybutów Tekstowych i Kategorycznych (Handling Text and Categorical Attributes)
 
@@ -205,10 +284,44 @@ Algorytmy ML są jak wybredni szefowie kuchni – potrzebują składników przyg
         *   **Jak to działa?** Tworzy nową, binarną (0/1) kolumnę dla każdej kategorii. Jeśli dzielnica ma kategorię `INLAND`, to w nowej kolumnie `INLAND` będzie `1`, a w pozostałych (`<1H OCEAN`, `NEAR BAY` itd.) będzie `0`.
         *   **Po co to robimy?** To najlepszy sposób na reprezentowanie danych kategorycznych bez wprowadzania sztucznej kolejności. Algorytm traktuje każdą kategorię jako oddzielną, niezależną cechę.
 
+```python
+from sklearn.preprocessing import OneHotEncoder
+
+# Kodowanie kolumny ocean_proximity
+housing_cat = housing[["ocean_proximity"]]
+cat_encoder = OneHotEncoder(sparse=False)
+housing_cat_1hot = cat_encoder.fit_transform(housing_cat)
+
+print(housing_cat_1hot[:5])  # Pierwsze 5 wierszy
+# Sprawdzenie nazw kolumn (kategorii)
+print(cat_encoder.categories_)
+```
+
 #### Niestandardowe Transformatory (Custom Transformers)
 
 *   **Czym są?** Możemy tworzyć własne "narzędzia" do transformacji danych, które będą działać tak samo jak te wbudowane w `scikit-learn`.
 *   **Po co to robimy?** Wcześniej ręcznie tworzyliśmy nowe cechy (np. `rooms_per_household`). Tworząc własny transformator (np. `CombinedAttributesAdder`), możemy włączyć ten krok do naszego automatycznego potoku przetwarzania danych. To sprawia, że nasz kod jest czysty, modułowy i łatwy do ponownego użycia.
+
+```python
+from sklearn.base import BaseEstimator, TransformerMixin
+
+class CombinedAttributesAdder(BaseEstimator, TransformerMixin):
+    def __init__(self, add_bedrooms_per_room=True):
+        self.add_bedrooms_per_room = add_bedrooms_per_room
+    
+    def fit(self, X, y=None):
+        return self
+    
+    def transform(self, X):
+        rooms_per_household = X[:, rooms_ix] / X[:, households_ix]
+        population_per_household = X[:, population_ix] / X[:, households_ix]
+        
+        if self.add_bedrooms_per_room:
+            bedrooms_per_room = X[:, bedrooms_ix] / X[:, rooms_ix]
+            return np.c_[X, rooms_per_household, population_per_household, bedrooms_per_room]
+        else:
+            return np.c_[X, rooms_per_household, population_per_household]
+```
 
 #### Skalowanie Cech (Feature Scaling)
 
@@ -218,6 +331,21 @@ Algorytmy ML są jak wybredni szefowie kuchni – potrzebują składników przyg
     1.  **Normalizacja (Min-Max Scaling):** Przeskalowuje wartości tak, aby mieściły się w zakresie od 0 do 1.
     2.  **Standaryzacja (Standardization):** Przesuwa wartości tak, aby miały średnią 0 i odchylenie standardowe 1. Jest mniej wrażliwa na wartości odstające (outliery) i często preferowana.
 *   **`StandardScaler`:** Klasa `scikit-learn` do standaryzacji.
+
+```python
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
+
+# Standaryzacja (średnia=0, std=1)
+scaler = StandardScaler()
+housing_num_scaled = scaler.fit_transform(housing_num)
+
+# Normalizacja (min=0, max=1)
+min_max_scaler = MinMaxScaler()
+housing_num_minmax = min_max_scaler.fit_transform(housing_num)
+
+# W modelach zespołowych (Random Forest, Gradient Boosting) skalowanie nie zawsze jest konieczne
+# Ale w SVM, Neural Networks i wielu innych algorytmach jest kluczowe!
+```
 
 #### Potoki Transformacji (Transformation Pipelines)
 
@@ -229,18 +357,34 @@ Algorytmy ML są jak wybredni szefowie kuchni – potrzebują składników przyg
 ```python
 # Przykład potoku dla danych numerycznych
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.impute import SimpleImputer
+from sklearn.compose import ColumnTransformer
 
+# Potok dla kolumn numerycznych
 num_pipeline = Pipeline([
     ('imputer', SimpleImputer(strategy="median")),
     ('attribs_adder', CombinedAttributesAdder()),
     ('std_scaler', StandardScaler()),
 ])
 
-# A ColumnTransformer połączy to z przetwarzaniem kolumn kategorycznych
-# ... i da nam jeden obiekt `full_pipeline`
+# Identyfikujemy kolumny numeryczne i kategoryczne
+num_attribs = list(housing.select_dtypes(include=[np.number]).columns)
+num_attribs.remove("median_house_value")  # Usuń target
+
+cat_attribs = ["ocean_proximity"]
+
+# Pełny potok dla wszystkich danych
+full_pipeline = ColumnTransformer([
+    ("num", num_pipeline, num_attribs),
+    ("cat", OneHotEncoder(), cat_attribs),
+])
+
+# Przeprowadzenie transformacji
+housing_prepared = full_pipeline.fit_transform(housing)
 ```
+
+* **Wyjaśnienie:** `ColumnTransformer` automatycznie tworzy osobne potoki dla kolumn numerycznych (`num`) i kategorycznych (`cat`), a następnie łączy ich wyniki w jedną macierz. To znacznie upraszcza kod i zapewnia, że wszystkie transformacje są wykonywane w odpowiedniej kolejności.
 
 ---
 
@@ -250,9 +394,43 @@ Po całym tym przygotowaniu, trenowanie modeli jest już proste.
 
 #### Trenowanie i Ocena na Zbiorze Treningowym
 
+```python
+from sklearn.linear_model import LinearRegression
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
+from sklearn.svm import SVR
+from sklearn.neural_network import MLPRegressor
+from sklearn.metrics import mean_squared_error
+import numpy as np
+
+# Przygotowanie danych
+housing_labels = housing["median_house_value"].copy()
+housing = housing.drop("median_house_value", axis=1)
+
+# 1. Model Liniowy (Linear Regression)
+lin_reg = LinearRegression()
+lin_reg.fit(housing_prepared, housing_labels)
+
+housing_predictions = lin_reg.predict(housing_prepared)
+lin_mse = mean_squared_error(housing_labels, housing_predictions)
+lin_rmse = np.sqrt(lin_mse)
+print(f"Linear Regression RMSE: {lin_rmse}")
+# Wynik: ok. 68,628 - to przykład **underfitting** - model zbyt prosty
+
+# 2. Drzewo Decyzyjne (Decision Tree Regressor)
+tree_reg = DecisionTreeRegressor()
+tree_reg.fit(housing_prepared, housing_labels)
+
+housing_predictions = tree_reg.predict(housing_prepared)
+tree_mse = mean_squared_error(housing_labels, housing_predictions)
+tree_rmse = np.sqrt(tree_mse)
+print(f"Decision Tree RMSE: {tree_rmse}")
+# Wynik: 0.0! To przykład **overfitting** - model "wykuł dane na pamięć"
+```
+
 1.  **Model Liniowy (Linear Regression):** Zaczynamy od prostego modelu. Trenujemy go na przygotowanych danych. Okazuje się, że jego błąd (RMSE) jest duży (ok. $68,628). To przykład **niedotrenowania (underfitting)** – model jest zbyt prosty, by nauczyć się złożonych wzorców w danych.
 2.  **Drzewo Decyzyjne (Decision Tree Regressor):** Próbujemy potężniejszego, bardziej złożonego modelu. Po treningu błąd na zbiorze treningowym wynosi... 0.0!
-    *   **Czy to dobrze?** Absolutnie nie. To klasyczny przykład **przetrenowania (overfitting)**. Model nie "nauczył się" danych, on je "wykuł na pamięć", łącznie z całym szumem i przypadkowymi zależnościami. Taki model będzie fatalnie działał na nowych danych.
+    *   **Czy to dobrze?** Absolutnie nie. To klasyczny przykład **przetrenowania (overfitting)**. Model nie "nauczył się" danych, on je "wykuł na pamięć", łącznie z całym szumem i przypadkowymi zależności kam. Taki model będzie fatalnie działał na nowych danych.
 
 #### Lepsza Ocena za pomocą Sprawdzianu Krzyżowego (Cross-Validation)
 
@@ -260,6 +438,66 @@ Po całym tym przygotowaniu, trenowanie modeli jest już proste.
 *   **Sprawdzian krzyżowy (Cross-Validation):** To technika, która dzieli zbiór **treningowy** na kilka (np. 10) części (tzw. "folds"). Następnie trenuje model 10 razy. Za każdym razem jedna część jest używana jako zbiór walidacyjny (do oceny), a pozostałe 9 jako treningowy. Na koniec uśredniamy wyniki z 10 przebiegów.
 *   **Po co to robimy?** Daje nam to znacznie stabilniejszą i bardziej wiarygodną ocenę wydajności modelu niż pojedynczy podział na zbiór treningowy i walidacyjny. Po zastosowaniu sprawdzianu krzyżowego na Drzewie Decyzyjnym widzimy, że jego błąd jest w rzeczywistości bardzo duży (ok. 71,407), nawet gorszy niż modelu liniowego. To potwierdza, że model mocno się przetrenował.
 *   **Model Lasu Losowego (Random Forest):** To model typu **zespołowego (ensemble)**. Zamiast jednego drzewa decyzyjnego, trenuje ich wiele na różnych podzbiorach danych, a następnie uśrednia ich predykcje. Okazuje się, że ten model działa znacznie lepiej, z błędem ok. 50,182. To nasz najlepszy kandydat.
+
+```python
+from sklearn.model_selection import cross_val_score
+
+def display_scores(scores):
+    print(f"Średnie: {scores.mean():.2f}")
+    print(f"Odchylenie std: {scores.std():.2f}")
+
+# Ocena Drzewa Decyzyjnego przez Cross-Validation
+scores = cross_val_score(tree_reg, housing_prepared, housing_labels,
+                         scoring="neg_mean_squared_error", cv=10)
+tree_rmse_scores = np.sqrt(-scores)
+display_scores(tree_rmse_scores)
+# Wynik: ok. 71,407 - znacznie gorszy niż wynik na treningowym (0.0)
+
+# 3. Las Losowy (Random Forest)
+forest_reg = RandomForestRegressor(n_estimators=100, random_state=42)
+forest_reg.fit(housing_prepared, housing_labels)
+
+scores = cross_val_score(forest_reg, housing_prepared, housing_labels,
+                         scoring="neg_mean_squared_error", cv=10)
+forest_rmse_scores = np.sqrt(-scores)
+display_scores(forest_rmse_scores)
+# Wynik: ok. 50,182 - najlepszy wynik!
+
+# 4. Gradient Boosting
+gbrt = GradientBoostingRegressor(n_estimators=100, learning_rate=0.1, max_depth=3)
+gbrt.fit(housing_prepared, housing_labels)
+
+scores = cross_val_score(gbrt, housing_prepared, housing_labels,
+                         scoring="neg_mean_squared_error", cv=10)
+gbrt_rmse_scores = np.sqrt(-scores)
+display_scores(gbrt_rmse_scores)
+
+# 5. Support Vector Machines (SVM)
+svm_reg = SVR(kernel="rbf", C=100, gamma="scale")
+svm_reg.fit(housing_prepared, housing_labels)
+
+scores = cross_val_score(svm_reg, housing_prepared, housing_labels,
+                         scoring="neg_mean_squared_error", cv=5)  # SVM jest wolny
+svm_rmse_scores = np.sqrt(-scores)
+display_scores(svm_rmse_scores)
+
+# 6. Neural Network (MLP)
+mlp_reg = MLPRegressor(hidden_layer_sizes=(100, 50), max_iter=500, random_state=42)
+mlp_reg.fit(housing_prepared, housing_labels)
+
+scores = cross_val_score(mlp_reg, housing_prepared, housing_labels,
+                         scoring="neg_mean_squared_error", cv=5)
+mlp_rmse_scores = np.sqrt(-scores)
+display_scores(mlp_rmse_scores)
+```
+
+**Porównanie algorytmów:**
+- **Linear Regression**: Prosty, szybki, interpretowalny. Często niedotrenowany.
+- **Decision Tree**: Bardzo złożony, łatwo się przetrenowuje. Dobry jako podstawa ensemble.
+- **Random Forest**: Zespół drzew. Bardzo dobry kompromis wydajności/czasu. Polecany jako baseline.
+- **Gradient Boosting**: Bardzo potężny, często najlepszy. Wolniejszy niż Random Forest.
+- **SVM**: Dobry dla małych zbiorów, wrażliwy na skalowanie danych.
+- **Neural Network**: Bardzo elastyczny, wymaga dużo danych i czasu treningu.
 
 ---
 
@@ -281,6 +519,37 @@ Mamy już obiecujący model (Las Losowy), ale możemy go jeszcze ulepszyć, dost
 To jest moment prawdy. Po całym procesie – czyszczeniu, trenowaniu, dostrajaniu – bierzemy nasz finalny, najlepszy model i po raz pierwszy oceniamy go na zbiorze testowym, który do tej pory był nietknięty.
 *   **Jak to robimy?** Bierzemy dane testowe, przepuszczamy je przez nasz `full_pipeline` (używając tylko metody `transform()`, a nie `fit_transform()`, bo nie chcemy uczyć się niczego ze zbioru testowego!), a następnie dokonujemy predykcji i obliczamy finalny błąd.
 *   **Po co to robimy?** Wynik na zbiorze testowym daje nam najlepsze oszacowanie tego, jak nasz model będzie działał w rzeczywistym świecie na nowych danych.
+
+```python
+from sklearn.model_selection import GridSearchCV
+
+# Grid Search dla Random Forest
+param_grid = [
+    {'n_estimators': [3, 10, 30], 'max_features': [2, 4, 6, 8]},
+    {'bootstrap': [False], 'n_estimators': [3, 10], 'max_features': [2, 3, 4]},
+]
+
+forest_reg = RandomForestRegressor(random_state=42)
+grid_search = GridSearchCV(forest_reg, param_grid, cv=5,
+                           scoring='neg_mean_squared_error',
+                           return_train_score=True)
+grid_search.fit(housing_prepared, housing_labels)
+
+print(f"Best parameters: {grid_search.best_params_}")
+print(f"Best estimator: {grid_search.best_estimator_}")
+
+# Finalna ocena na zbiorze testowym
+final_model = grid_search.best_estimator_
+
+# IMPORTANT: Używamy tylko transform(), nie fit_transform()!
+X_test_prepared = full_pipeline.transform(test_set.drop("median_house_value", axis=1))
+y_test = test_set["median_house_value"].copy()
+final_predictions = final_model.predict(X_test_prepared)
+
+final_mse = mean_squared_error(y_test, final_predictions)
+final_rmse = np.sqrt(final_mse)
+print(f"Final RMSE on test set: {final_rmse}")
+```
 
 ---
 
