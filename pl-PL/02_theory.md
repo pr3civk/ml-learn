@@ -79,6 +79,45 @@ To jeden z najważniejszych i często pomijanych kroków w całym procesie. Zani
 2.  **Próbkowanie warstwowe (Stratified Sampling)**
     *   **Czym jest?** To mądrzejszy sposób podziału. Zamiast losować całkowicie przypadkowo, dbamy o to, aby zbiór testowy był reprezentatywną miniaturką całego zbioru danych.
     *   **Po co to robimy?** Wyobraźmy sobie, że w naszych danych `median_income` (mediana dochodu) jest kluczową cechą do przewidywania ceny domu. Jeśli przez przypadek do zbioru testowego trafią głównie dzielnice o wysokich dochodach, nasza ocena modelu będzie niemiarodajna. Próbkowanie warstwowe dzieli dane na podgrupy (warstwy), np. na podstawie kategorii dochodu, a następnie losuje odpowiednią liczbę próbek z każdej podgrupy, zachowując te same proporcje co w oryginalnym zbiorze. Dzięki temu mamy pewność, że nasz zbiór testowy nie jest "przekrzywiony" i dobrze odzwierciedla całą populację.
+    *   **Różne klasy Stratified Sampling dostępne w scikit-learn:**
+        *   **`train_test_split(stratify=...)`**: Najprostsza metoda dla standardowego podziału 80/20 lub podobnego. Używamy parametru `stratify`, który automatycznie dba o zachowanie proporcji kategorii w zbiorze treningowym i testowym.
+        *   **`StratifiedShuffleSplit`**: Użyteczna, gdy potrzebujemy większej kontroli lub chcemy wykonać wiele iteracji podziału (np. do Monte Carlo validation). Pozwala na wielokrotne losowe podziały danych.
+        *   **`StratifiedKFold`**: Idealna do sprawdzianu krzyżowego (cross-validation). Dzieli dane na k równych części (np. k=5), dbając o to, aby każda część miała takie same proporcje kategorii.
+        *   **`StratifiedGroupKFold`**: Specjalna wersja dla danych, gdzie próbki należą do grup (np. pomiary od różnych pacjentów, eksperymenty). Zapewnia, że wszystkie próbki z tej samej grupy trafiają do tego samego folda, co zapobiega tzw. "data leakage".
+    *   **Kiedy użyć którą metodę?** Wybierz `train_test_split(stratify=...)` dla większości przypadków - to najprostsze i najbardziej uniwersalne rozwiązanie. Użyj `StratifiedKFold` gdy potrzebujesz cross-validation, `StratifiedShuffleSplit` dla zaawansowanych scenariuszy z wieloma iteracjami, a `StratifiedGroupKFold` tylko gdy masz dane pogrupowane.
+    ```python
+    # Przykład użycia Stratified Sampling z train_test_split
+    import pandas as pd
+    import numpy as np
+    from sklearn.model_selection import train_test_split
+    
+    # Najpierw musimy stworzyć kategorię do warstwowania (stratification)
+    # Ponieważ median_income jest wartością ciągłą, dzielimy ją na kategorie
+    housing["income_cat"] = pd.cut(housing["median_income"],
+                                    bins=[0., 1.5, 3.0, 4.5, 6., np.inf],
+                                    labels=[1, 2, 3, 4, 5])
+    
+    # Teraz używamy stratified sampling - proporcje kategorii dochodu
+    # będą zachowane w obu zbiorach (train i test)
+    train_set, test_set = train_test_split(
+        housing, 
+        test_size=0.2, 
+        random_state=42,
+        stratify=housing["income_cat"]  # Kluczowy parametr!
+    )
+    
+    # Po podziale możemy usunąć pomocniczą kolumnę income_cat
+    for set_ in (train_set, test_set):
+        set_.drop("income_cat", axis=1, inplace=True)
+    
+    # Alternatywnie: użycie StratifiedShuffleSplit dla większej kontroli
+    from sklearn.model_selection import StratifiedShuffleSplit
+    
+    split = StratifiedShuffleSplit(n_splits=1, test_size=0.2, random_state=42)
+    for train_index, test_index in split.split(housing, housing["income_cat"]):
+        strat_train_set = housing.loc[train_index]
+        strat_test_set = housing.loc[test_index]
+    ```
 
 ---
 
