@@ -32,6 +32,87 @@ from sklearn.model_selection import StratifiedShuffleSplit
 
 ---
 
+### Podstawowe Metody scikit-learn: fit(), fit_transform() i transform()
+
+Zanim przejdziemy dalej, musimy zrozumieć **kluczowe metody**, które pojawiają się w niemal każdym kodzie uczenia maszynowego. `scikit-learn` ma spójny interfejs - prawie wszystkie obiekty mają te same metody. To bardzo upraszcza pracę!
+
+#### Trzy metody transformacji danych:
+
+1. **`fit(X)`** - "Nauka" z danych
+   * **Czym jest?** Ta metoda "uczy się" z danych. Oznacza to, że oblicza pewne parametry i zapamiętuje je.
+   * **Przykład:** Jeśli mamy `SimpleImputer(strategy="median")` i wywołamy `fit(housing_num)`, to imputer obliczy medianę każdej kolumny i zapamięta ją.
+   * **WAŻNE:** Ta metoda **NIE ZMIENIA** danych - tylko je czyta, aby się czegoś nauczyć.
+
+2. **`transform(X)`** - Transformacja danych
+   * **Czym jest?** Ta metoda **ZMIENIA** dane, używając parametrów, które zostały wcześniej "nauczone" przez `fit()`.
+   * **WAŻNE:** Możesz wywołać `transform()` TYLKO po `fit()` - inaczej nie będzie wiedział, jak transformować!
+   * **Przykład:** Gdy imputer "nauczył się" mediany (przez `fit()`), teraz może wypełnić brakujące wartości (przez `transform()`).
+
+3. **`fit_transform(X)`** - "Nauka" i transformacja w jednym kroku
+   * **Czym jest?** To skrótowy sposób na wykonanie `fit()` i `transform()` na tych samych danych.
+   * **Kiedy używać?** Tylko na **zbiorze treningowym**!
+   * **Kiedy NIE używać?** ZAWSZE na zbiorze testowym - tam używamy tylko `transform()`!
+
+#### Analogia z gotowaniem:
+
+Wyobraź sobie, że jesteś kucharzem i chcesz przygotować sos:
+- **`fit(data_train)`** = Przeczytanie przepisu i nauczenie się proporcji
+- **`transform(data_train)`** = Zastosowanie przepisu i przygotowanie sosu
+- **`fit_transform(data_train)`** = Nauka przepisu I przygotowanie sosu jednocześnie
+
+Ale potem dla nowego dania:
+- **`transform(data_test)`** = Użycie TEGO SAMEGO przepisu do nowego dania (nie uczymy się znowu!)
+
+#### Kluczowa zasada - dlaczego to jest tak ważne:
+
+```python
+# ✅ DOBRZE - dla zbioru treningowego
+train_prepared = imputer.fit_transform(housing_num)  # albo: fit() + transform()
+
+# ✅ DOBRZE - dla zbioru testowego
+test_prepared = imputer.transform(test_num)  # Używamy już nauczonych parametrów!
+
+# ❌ ŹLE - dla zbioru testowego
+test_prepared = imputer.fit_transform(test_num)  # NIE! To "uczy się" ze zbioru testowego!
+```
+
+**Dlaczego to błąd?** Jeśli użyjemy `fit_transform()` na zbiorze testowym, algorytm "nauczy się" parametrów (np. median) z danych testowych. To nazywa się **"data leakage" (wyciek danych)** i powoduje nierealistycznie dobre wyniki. Zbiór testowy ma symulować **całkowicie nowe, nieznane dane**, więc wszelkie "uczenie się" musi odbywać się tylko na zbiorze treningowym.
+
+#### Przykład praktyczny:
+
+```python
+from sklearn.impute import SimpleImputer
+import numpy as np
+
+# Dane treningowe (brakuje wartości w kolumnie 0)
+X_train = np.array([[7.0, 3], [np.nan, 1], [4.0, 5]])
+print("Przed: ", X_train)
+
+# Dane testowe
+X_test = np.array([[np.nan, 3], [2.0, 4]])
+
+# ✅ DOBRZE: Najpierw uczymy się z danych treningowych
+imputer = SimpleImputer(strategy="median")
+X_train_filled = imputer.fit_transform(X_train)
+print("Po wypełnieniu (train): ", X_train_filled)
+# Wynik: [[7. 3.] [5.5 1.] [4. 5.]] - mediana kolumny 0 to 5.5
+
+# ✅ DOBRZE: Używamy tych samych parametrów dla danych testowych
+X_test_filled = imputer.transform(X_test)
+print("Po wypełnieniu (test): ", X_test_filled)
+# Wynik: [[5.5 3.] [2. 4.]] - używa 5.5 (nauka ze zbioru treningowego!)
+
+# ❌ ŹLE: Gdybyśmy użyli fit_transform na testowym
+# X_test_filled = imputer.fit_transform(X_test)  # To byłby błąd!
+```
+
+**Podsumowanie:**
+- `fit()` - uczy się parametrów (tylko na treningowym)
+- `transform()` - stosuje nauczone parametry (na treningowym I testowym)
+- `fit_transform()` - robi obie rzeczy naraz (tylko na treningowym!)
+
+---
+
 ### Szybki Przegląd Struktury Danych (Take a Quick Look at the Data Structure)
 
 Zanim zaczniemy skomplikowane analizy, musimy "zapoznać się" z naszymi danymi. To tak, jakbyśmy dostali nowy zestaw narzędzi – najpierw chcemy zobaczyć, co jest w środku, zanim zaczniemy budować.
