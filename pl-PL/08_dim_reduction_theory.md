@@ -1,5 +1,3 @@
-Jasne, oto szczegółowe omówienie rozdziału 8 "Redukcja Wymiarowości", przygotowane zgodnie z Twoimi wytycznymi. Tekst został przetworzony tak, aby skupić się na kluczowej wiedzy, wyjaśnieniach "dlaczego coś robimy" oraz praktycznych zastosowaniach w prosty i zrozumiały sposób.
-
 ### **Rozdział 8: Redukcja Wymiarowości**
 
 #### **Wprowadzenie do problemu**

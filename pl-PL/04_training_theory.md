@@ -1,5 +1,3 @@
-Jasne, przeanalizujmy dostarczony tekst i stwórzmy na jego podstawie kompleksowe, ale proste w odbiorze kompendium wiedzy na temat trenowania modeli, zakończone schematycznym planem działania.
-
 ### **Rozdział 4: Trenowanie Modeli – Streszczenie i Wyjaśnienie Kluczowych Pojęć**
 
 Ten rozdział tłumaczy, co dzieje się "pod maską" modeli uczenia maszynowego. Zamiast traktować je jak czarne skrzynki, zagłębiamy się w mechanizmy ich działania, co pozwala lepiej dobierać modele, algorytmy i parametry, a także skuteczniej je debugować.

@@ -1,5 +1,3 @@
-Jasne, oto szczegółowe omówienie tekstu, podzielone na podrozdziały, z wyjaśnieniem pojęć i kodu zgodnie z Twoimi wytycznymi, a na końcu schematyczny plan projektu.
-
 ### **Wstęp (Rozdziały 1 i 2 - tło)**
 
 *   **Streszczenie:** Autor przypomina, że uczenie maszynowe nadzorowane dzieli się na dwa główne typy zadań: **regresję** (przewidywanie ciągłych wartości, np. ceny domu) i **klasyfikację** (przewidywanie kategorii/klas, np. czy na zdjęciu jest cyfra "5"). Po omówieniu regresji w poprzednim rozdziale, teraz skupimy się na klasyfikacji.

@@ -1,5 +1,3 @@
-Jasne, oto szczegółowe streszczenie i wyjaśnienie pojęć z podanych rozdziałów, przygotowane w sposób ułatwiający naukę.
-
 ### **Rozdział 6: Drzewa Decyzyjne**
 
 Drzewa decyzyjne to jedne z najbardziej intuicyjnych algorytmów uczenia maszynowego. Działają na zasadzie zadawania serii pytań "tak/nie" dotyczących cech danych, aby podzielić je na coraz mniejsze grupy, aż do momentu, w którym w każdej grupie znajdą się dane należące do jednej klasy (lub o podobnej wartości w przypadku regresji).

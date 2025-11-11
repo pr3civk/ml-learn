@@ -1,5 +1,3 @@
-Jasne, przeanalizujmy dostarczony materiał o Maszynach Wektorów Nośnych (SVM) krok po kroku. Stworzę kompleksowe streszczenie, które będzie łatwe do przyswojenia i nauki, koncentrując się na wyjaśnieniu "dlaczego" robimy pewne rzeczy, a nie tylko "co" robimy.
-
 ### **Rozdział 5: Maszyny Wektorów Nośnych (SVM)**
 
 #### **Wprowadzenie**
